@@ -21,8 +21,8 @@ except:
     NET,STA,LOC,CHAN="FR", "CURIE", "00", "HHZ"
     NET,STA,LOC,CHAN="AM", "R8F35", "00", "SHZ" # BG
     NET,STA,LOC,CHAN="AM", "RFD43", "00", "EHZ" # RB
-    NET,STA,LOC,CHAN="AM", "R9F1B", "00", "SHZ"
     NET,STA,LOC,CHAN="AM", "RBFD5", "00", "SHZ" # NB
+    NET,STA,LOC,CHAN="AM", "R9F1B", "00", "SHZ"
 
 nslc = "{}.{}.{}.{}".format(NET, STA, LOC, CHAN)
 # make sure that wildcard characters are not in nslc
@@ -40,8 +40,8 @@ for csvfile in glob(fn_pattern):
     if os.path.isfile(csvfile):
         try:
             df=pd.read_csv(csvfile, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
-            #Q=np.quantile(df.rms, 0.95)
-            #df.rms=np.clip(df.rms, 0, Q)
+            Q=np.quantile(df.rms, 0.90)
+            df.rms=np.clip(df.rms, 0, Q)
         except:
             raise()
     try:
@@ -49,6 +49,7 @@ for csvfile in glob(fn_pattern):
     except:
         dfALL=df
 
+dfALL['Datetime']=pd.to_datetime(dfALL['Datetime'], unit='s')
 dfALL=dfALL.sort_values(by=['Datetime'])
 fig=plt.figure()
 ax=plt.axes()

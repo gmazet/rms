@@ -21,8 +21,8 @@ except:
     NET,STA,LOC,CHAN="FR", "CURIE", "00", "HHZ"
     NET,STA,LOC,CHAN="AM", "R8F35", "00", "SHZ" # BG
     NET,STA,LOC,CHAN="AM", "RFD43", "00", "EHZ" # RB
-    NET,STA,LOC,CHAN="AM", "R9F1B", "00", "SHZ"
     NET,STA,LOC,CHAN="AM", "RBFD5", "00", "SHZ" # NB
+    NET,STA,LOC,CHAN="AM", "R9F1B", "00", "SHZ"
 
 try:
     client = Client(PROVIDER)
@@ -30,9 +30,10 @@ except:
     client = Client("RASPISHAKE")
 
 BEGTIME = "2021-04-05T00:00:00.000"
-DURATION_HOURS=24*5
+BEGTIME = "2021-01-01T00:00:00.000"
+DURATION_HOURS=24*100
 DURATION=3600.0*DURATION_HOURS-1
-WINLEN_SEC=1800
+WINLEN_SEC=3600
 STEP_SEC=int(WINLEN_SEC)
 
 FMIN,FMAX=3.0,15.0
@@ -55,7 +56,7 @@ for day in pbar:
     else:
         pbar.set_description("Fetching %s" % fn)
         try: 
-            st = client.get_waveforms(NET, STA, LOC, CHAN, UTCDateTime(day)-WINLEN_SEC, UTCDateTime(day)+86400-1, attach_response=True)
+            st = client.get_waveforms(NET, STA, LOC, CHAN, UTCDateTime(day), UTCDateTime(day)+86400, attach_response=True)
             st.merge(fill_value='interpolate')
             sr=st[0].stats.sampling_rate
             if (sr>=50.0):
@@ -115,6 +116,8 @@ for day in pbar:
         stD = read(fn_in, sourcename=mseedid)
 
     #stD.merge()
+    day2=day+1
+    ##stD.trim(UTCDateTime(day),UTCDateTime(day2+))
     sr=stD[0].stats.sampling_rate
 
     print (stD)
@@ -132,22 +135,33 @@ for day in pbar:
     #d = {'rtime': stD[0].times('utcdatetime') , 'rms': stD[0].data**2}
     d = { 'rms': stD[0].data**2}
     df = pd.DataFrame(data=d)
+    #df['Datetime']=stD[0].times('utcdatetime')
+    #print (df)
 
     print ("Rolling mean ...")
     WINLEN=int(sr*WINLEN_SEC)
-    df2=df.rolling(WINLEN, center=True, min_periods=90).mean().apply(np.sqrt)
-    #print (df2)
+    df2=df.rolling(WINLEN, center=True, min_periods=int(WINLEN/2)).mean().apply(np.sqrt)
     print ("...")
+    df2['Datetime']=stD[0].times('timestamp')
+    #df2['Datetime']=stD[0].times('utcdatetime')
+    #print (df2)
 
     STEP=int(sr*STEP_SEC)
-    df2=df2[STEP::STEP]
+    df2=df2[int(STEP/2)::STEP]
+    print (df2.iloc[0]['Datetime'])
+    print (pd.to_datetime(df2.iloc[0]['Datetime'], unit='s'))
+    print (pd.to_datetime(df2.iloc[-1]['Datetime'], unit='s'))
     print ("len(df2)=",len(df2))
 
-    day2=day+1
-    datelist = pd.date_range(day,day2 , freq="30min")
-    #print (df2)
+
+    """
+    t3=t1+86400-3600
+    datelist = pd.date_range(t1.datetime,t3.datetime , freq="60min")
+    print (df2)
+    print (datelist)
     print (len(df2), len(datelist))
     df2['Datetime']=datelist
+    """
 
     #print (df2)
 
