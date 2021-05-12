@@ -17,6 +17,7 @@ from glob import glob
 
 from sys import exit,argv
 import os
+import pathlib
 
 SDSROOT="/cea/dsku/SDS_buffer_AF"
 

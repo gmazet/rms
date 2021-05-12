@@ -82,14 +82,23 @@ print ("")
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
     print ("day",day)
+
+    YYYY = day.strftime("%Y")
+    MM = day.strftime("%m")
+    DD = day.strftime("%d")
     datestr = day.strftime("%Y-%m-%d")
-    fn_in = "{}/rawdata/{}_{}.mseed".format(DATADIR,datestr, nslc)
+    rawdatadir="{}/rawdata/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+
+    fn_in = "{}/{}_{}.mseed".format(rawdatadir,datestr, nslc)
     pbar.set_description("PPSD %s" % fn_in)
     if not os.path.isfile(fn_in):
         continue
     stall = read(fn_in, headonly=True)
     for mseedid in list(set([tr.id for tr in stall])):
-        fn_out = "{}/npz/{}_{}.npz".format(DATADIR,datestr, nslc)
+        npzdatadir="{}/npz/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+        pathlib.Path(npzdatadir).mkdir(parents=True, exist_ok=True)
+        #fn_out = "{}/npz/{}_{}.npz".format(DATADIR,datestr, nslc)
+        fn_out = "{}/{}_{}.npz".format(npzdatadir,datestr, nslc)
 
         if os.path.isfile(fn_out) and not force_reprocess:
             continue

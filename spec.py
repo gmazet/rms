@@ -52,8 +52,12 @@ nslc = nslc.replace("*", "").replace("?", "")
 ppsds = {}
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
+    YYYY = day.strftime("%Y")
+    MM = day.strftime("%m")
+    DD = day.strftime("%d")
     datestr = day.strftime("%Y-%m-%d")
-    fn_pattern = "{}/npz/{}_{}.npz".format(DATADIR,datestr, nslc)
+    npzdatadir="{}/npz/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+    fn_pattern = "{}/{}_{}.npz".format(npzdatadir,datestr, nslc)
     pbar.set_description("Reading %s" % fn_pattern)
     for fn in glob(fn_pattern):
         mseedid = fn.replace(".npz", "").split("_")[-1]

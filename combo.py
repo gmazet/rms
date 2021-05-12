@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-
 # -*- coding: utf-8 -*-
+
 from ppsd_utils import *
 from obspy.signal import PPSD
 
@@ -23,7 +23,7 @@ from obspy.imaging.util import _set_xaxis_obspy_dates
 #YMAX=25.0 # nm/s in rms 
 
 OUTPUT="DISP"
-YMAX=0.5 # nm in rms 
+YMAX=1.0 # nm in rms 
 cmap2 = cm.inferno
 
 DECIM=1 # 6 = every 1 hour; 3 = every 1/2 hour; 1 = every 10 min
@@ -284,8 +284,13 @@ tr=stALL[0]
 ppsds = {}
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
+    YYYY = day.strftime("%Y")
+    MM = day.strftime("%m")
+    DD = day.strftime("%d")
     datestr = day.strftime("%Y-%m-%d")
-    fn_pattern = "{}/npz/{}_{}.npz".format(DATADIR,datestr, nslc)
+    npzdatadir="{}/npz/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+    #fn_pattern = "{}/npz/{}_{}.npz".format(DATADIR,datestr, nslc)
+    fn_pattern = "{}/{}_{}.npz".format(npzdatadir,datestr, nslc)
     pbar.set_description("Reading %s" % fn_pattern)
     for fn in glob(fn_pattern):
         mseedid = fn.replace(".npz", "").split("_")[-1]
@@ -302,16 +307,29 @@ for day in pbar:
 headers = ['rms', 'Datetime']
 dtypes = {'rms': 'float', 'Datetime': 'str'}
 parse_dates = ['Datetime']
+
 print ("%s/csv/*_%s_%s.csv" % (DATADIR,nslc,FREQ1))
-for fn in glob("%s/csv/*_%s_%s.csv" % (DATADIR,nslc,FREQ1)):
-    df=pd.read_csv(fn, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
-    Q=np.quantile(df.rms, QUANTILE)
-    df.rms=np.clip(df.rms, 0, Q)
-    df.rms=df.rms*1e+9 #nm
-    try:
-        dfALL=pd.concat([dfALL, df], ignore_index=True)
-    except:
-        dfALL=df
+#for fn in glob("%s/csv/*_%s_%s.csv" % (DATADIR,nslc,FREQ1)):
+
+pbar = tqdm.tqdm(datelist)
+for day in pbar:
+    YYYY = day.strftime("%Y")
+    MM = day.strftime("%m")
+    DD = day.strftime("%d")
+    datestr = day.strftime("%Y-%m-%d")
+
+    csvdatadir="{}/csv/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+    fn_pattern = "{}/{}_{}_{}.csv".format(csvdatadir,datestr, nslc,FREQ1)
+    pbar.set_description("Reading %s" % fn_pattern)
+    for fn in glob(fn_pattern):
+        df=pd.read_csv(fn, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
+        Q=np.quantile(df.rms, QUANTILE)
+        df.rms=np.clip(df.rms, 0, Q)
+        df.rms=df.rms*1e+9 #nm
+        try:
+            dfALL=pd.concat([dfALL, df], ignore_index=True)
+        except:
+            dfALL=df
 
 try:
     dfALL['Datetime']=pd.to_datetime(dfALL['Datetime'], unit='s')
@@ -326,18 +344,30 @@ dfRMS1['Datetime']=pd.to_datetime(dfRMS1['Datetime'], unit='s')
 del dfALL
 del df
 
+print ("----")
 # ---------------------------------------------
-# Reead rms files
+# Read rms files
 # ---------------------------------------------
-for fn in glob("%s/csv/*_%s_%s.csv" % (DATADIR,nslc,FREQ2)):
-    df=pd.read_csv(fn, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
-    Q=np.quantile(df.rms, QUANTILE)
-    df.rms=np.clip(df.rms, 0, Q)
-    df.rms=df.rms*1e+9 #nm
-    try:
-        dfALL=pd.concat([dfALL, df], ignore_index=True)
-    except:
-        dfALL=df
+#for fn in glob("%s/csv/*_%s_%s.csv" % (DATADIR,nslc,FREQ2)):
+pbar = tqdm.tqdm(datelist)
+for day in pbar:
+    YYYY = day.strftime("%Y")
+    MM = day.strftime("%m")
+    DD = day.strftime("%d")
+    datestr = day.strftime("%Y-%m-%d")
+
+    csvdatadir="{}/csv/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+    fn_pattern = "{}/{}_{}_{}.csv".format(csvdatadir,datestr, nslc,FREQ2)
+    pbar.set_description("Reading %s" % fn_pattern)
+    for fn in glob(fn_pattern):
+        df=pd.read_csv(fn, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
+        Q=np.quantile(df.rms, QUANTILE)
+        df.rms=np.clip(df.rms, 0, Q)
+        df.rms=df.rms*1e+9 #nm
+        try:
+            dfALL=pd.concat([dfALL, df], ignore_index=True)
+        except:
+            dfALL=df
 
 try:
     dfALL['Datetime']=pd.to_datetime(dfALL['Datetime'], unit='s')

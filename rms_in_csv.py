@@ -10,7 +10,7 @@ print ("start ",basename)
 # ----------------------------
 #OUTPUT="VEL" # DISP, VEL or ACC
 OUTPUT="DISP" # DISP, VEL or ACC
-PROCESSED_DATA_DIR="%s/%s" % (DATADIR,OUTPUT)
+#PROCESSED_DATA_DIR="%s/%s" % (DATADIR,OUTPUT)
 # ----------------------------
 
 print ("")
@@ -46,9 +46,17 @@ print ("")
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
     print ("day",day)
+    YYYY = day.strftime("%Y")
+    MM = day.strftime("%m")
+    DD = day.strftime("%d")
     datestr = day.strftime("%Y-%m-%d")
-    fn_in = "{}/{}_{}.mseed".format(PROCESSED_DATA_DIR,datestr, nslc)
-    csvfile="%s/csv/%s_%s_%.1f_%.1fHz.csv" % (DATADIR,datestr,nslc,FMIN,FMAX)
+    processeddatadir="{}/{}/{}/{}/{}".format(DATADIR,OUTPUT,YYYY,MM,DD)
+    fn_in = "{}/{}_{}.mseed".format(processeddatadir,datestr, nslc)
+    #fn_in = "{}/{}_{}.mseed".format(PROCESSED_DATA_DIR,datestr, nslc)
+    #csvfile="%s/csv/%s_%s_%.1f_%.1fHz.csv" % (DATADIR,datestr,nslc,FMIN,FMAX)
+    csvdatadir="{}/csv/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
+    pathlib.Path(csvdatadir).mkdir(parents=True, exist_ok=True)
+    csvfile="%s/%s_%s_%.1f_%.1fHz.csv" % (csvdatadir,datestr,nslc,FMIN,FMAX)
     pbar.set_description("Reading displacement files %s" % fn_in)
     if not os.path.isfile(fn_in):
         continue
