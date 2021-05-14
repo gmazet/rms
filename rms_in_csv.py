@@ -29,6 +29,9 @@ except:
     print ('Usage: %s "YYYY-MM-DDTHH:mm:ss.s" <nb hours> <network> <station> <location> <channel> <freq min> <freq max> <window length (seconds)>')
     exit()
 
+cfgfile="./rms.cfg"
+SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
+
 start = UTCDateTime(begtime)
 end=start+durationH*3600
 print ("start=",start,"end=",end)

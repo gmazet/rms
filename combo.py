@@ -17,6 +17,9 @@ from matplotlib import cm
 from obspy.imaging.cm import pqlx, obspy_sequential
 from obspy.imaging.util import _set_xaxis_obspy_dates
 
+cfgfile="./rms.cfg"
+SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
+
 
 # ---------------------------------
 #OUTPUT="VEL"

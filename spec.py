@@ -19,9 +19,12 @@ cmap1 = cm.magma
 cmap1 = cm.plasma
 cmap2 = cm.inferno
 
-SDSROOT="/cea/dsku/SDS_buffer_AF"
-XMLDIR="/dase/AF-OP/gm171646/Documents/LDG/Etudes/Eoliennes/signaux/xmlresponses"
-DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
+#SDSROOT="/cea/dsku/SDS_buffer_AF"
+#XMLDIR="/dase/AF-OP/gm171646/Documents/LDG/Etudes/Eoliennes/signaux/xmlresponses"
+#DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
+
+cfgfile="./rms.cfg"
+SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
 
 try:
     begtime=argv[1]

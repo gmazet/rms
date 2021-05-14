@@ -36,6 +36,9 @@ start = UTCDateTime(begtime)
 end=start+durationH*3600
 print ("start=",start,"end=",end)
 
+cfgfile="./rms.cfg"
+SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
+
 try:
     fclient=FDSNClient("RESIF")
 except:
