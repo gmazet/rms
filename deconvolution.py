@@ -26,7 +26,11 @@ except:
     print ('Usage: %s "YYYY-MM-DDTHH:mm:ss.s" <nb hours> <network> <station> <location> <channel> <DISP or VEL or ACC>' % basename)
     exit()
 
-PROCESSED_DATA_DIR="%s/%s" % (DATADIR,OUTPUT)
+cfgfile="./rms.cfg"
+SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
+
+#PROCESSED_DATA_DIR="%s/%s" % (DATADIR,OUTPUT)
+print (SDSROOT)
 
 start = UTCDateTime(begtime)
 end=start+durationH*3600
