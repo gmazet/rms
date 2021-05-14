@@ -24,6 +24,7 @@ from obspy.imaging.util import _set_xaxis_obspy_dates
 
 OUTPUT="DISP"
 YMAX=1.0 # nm in rms 
+YMAX2=3.0 # nm in rms 
 cmap2 = cm.inferno
 
 DECIM=1 # 6 = every 1 hour; 3 = every 1/2 hour; 1 = every 10 min
@@ -153,12 +154,12 @@ def plot_spectrogram_and_rms(ppsd, df, cmap=cmap2, clim=None, grid=True,
         YMAX11=max(abs(df['rms']))*1.05
         YMAX12=max(abs(df['rms2']))*1.05
         if (station != "HYF"):
-            ax11.set_ylim(0,YMAX) # nm/s
-            ax12.set_ylim(0,YMAX) # nm/s
+            ax11.set_ylim(0.1,YMAX) # nm/s
+            ax12.set_ylim(0,YMAX2) # nm/s
         else:
             ax11.set_ylim(0,YMAX11) # nm/s
             ax12.set_ylim(0,YMAX11) # nm/s
-        #ax11.set_yscale("log")
+        ax11.set_yscale("log")
         #ax12.set_yscale("log")
 
         #bbox = {'fc': '0.8', 'pad': 0}
@@ -228,14 +229,14 @@ wlen=int(end-start)/60 # pour spectrogramme
 t3=start+DURATION/100
 t4=end-DURATION/100
 
-XMLDIR="/dase/AF-OP/gm171646/Documents/LDG/Etudes/Eoliennes/signaux/xmlresponses"
+#XMLDIR="/dase/AF-OP/gm171646/Documents/LDG/Etudes/Eoliennes/signaux/xmlresponses"
 
-SDSROOT="/cea/dsku/SDS_buffer_AF"
+#SDSROOT="/cea/dsku/SDS_buffer_AF"
 #client=SDSClient(SDSROOT)
 #fclient=FDSNClient("RESIF")
 
 ##DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms/%s"%OUTPUT
-DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
+#DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
 
 nslc = "{}.{}.{}.{}".format(network, station, location, channel)
 nslc = nslc.replace("*", "").replace("?", "")
@@ -384,7 +385,7 @@ dfRMS3=pd.merge(dfRMS2, dfRMS1, on=["Datetime"])
 
 # ---
 
-print ("====")
+print ("----")
 dfRMS3=dfRMS3[::STEP]
 print (dfRMS3)
 
