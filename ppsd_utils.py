@@ -19,14 +19,30 @@ from sys import exit,argv
 import os
 import pathlib
 
-SDSROOT="/cea/dsku/SDS_buffer_AF"
-SDSROOT="."
+#SDSROOT="/cea/dsku/SDS_buffer_AF"
+#SDSROOT="."
+#
+#XMLDIR="/cea/data/outils/dase/seiscomp/xml"
+#TELSITE_XMLDIR="/cea/data/outils/dase/noise_analysis/telsite/invfiles"
+#
+#DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
+#DATADIR="."
 
-XMLDIR="/cea/data/outils/dase/seiscomp/xml"
-TELSITE_XMLDIR="/cea/data/outils/dase/noise_analysis/telsite/invfiles"
+def readcfg(cfgfile):
+    f=open(cfgfile,'r')
+    for l in f:
+        l=l.split("=")
+        print (l)
+        if (l[0]=="SDSROOT"):
+            SDSROOT=l[1].strip()
+        if (l[0]=="XMLDIR"):
+            XMLDIR=l[1].strip()
+        if (l[0]=="TELSITE_XMLDIR"):
+            TELSITE_XMLDIR=l[1].strip()
+        if (l[0]=="DATADIR"):
+            DATADIR=l[1].strip()
 
-DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
-DATADIR="."
+    return SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR
 
 font = {'family': 'Tahoma',
         'color':  'black',
