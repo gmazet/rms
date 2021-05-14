@@ -109,7 +109,7 @@ for day in pbar:
         trace=st[0]
         print ("ppsd...")
         ppsd = PPSD(trace.stats, inv,
-                ppsd_length=120, overlap=0.5,
+                ppsd_length=600, overlap=0.5,
                 period_smoothing_width_octaves=0.025,
                 period_step_octaves=0.0125,
                 period_limits=(freqmin, freqmax),
