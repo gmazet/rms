@@ -20,11 +20,13 @@ import os
 import pathlib
 
 SDSROOT="/cea/dsku/SDS_buffer_AF"
+SDSROOT="."
 
 XMLDIR="/cea/data/outils/dase/seiscomp/xml"
 TELSITE_XMLDIR="/cea/data/outils/dase/noise_analysis/telsite/invfiles"
 
 DATADIR="/cea/dsku/SDS_muru/SDS_muru/rms"
+DATADIR="."
 
 font = {'family': 'Tahoma',
         'color':  'black',
