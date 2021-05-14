@@ -26,7 +26,7 @@ SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
 #YMAX=25.0 # nm/s in rms 
 
 OUTPUT="DISP"
-YMAX=1.0 # nm in rms 
+YMAX1=1.0 # nm in rms 
 YMAX2=3.0 # nm in rms 
 cmap2 = cm.inferno
 
@@ -157,7 +157,7 @@ def plot_spectrogram_and_rms(ppsd, df, cmap=cmap2, clim=None, grid=True,
         YMAX11=max(abs(df['rms']))*1.05
         YMAX12=max(abs(df['rms2']))*1.05
         if (station != "HYF"):
-            ax11.set_ylim(0.1,YMAX) # nm/s
+            ax11.set_ylim(0.1,YMAX1) # nm/s
             ax12.set_ylim(0,YMAX2) # nm/s
         else:
             ax11.set_ylim(0,YMAX11) # nm/s
