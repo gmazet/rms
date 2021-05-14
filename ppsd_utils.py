@@ -32,7 +32,6 @@ def readcfg(cfgfile):
     f=open(cfgfile,'r')
     for l in f:
         l=l.split("=")
-        print (l)
         if (l[0]=="SDSROOT"):
             SDSROOT=l[1].strip()
         if (l[0]=="XMLDIR"):
