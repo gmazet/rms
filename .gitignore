@@ -9,3 +9,5 @@ plot.sh
 rawdata/
 resif.sta
 resif2.sh
+rms.cfg
+*.swp
