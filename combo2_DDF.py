@@ -1,12 +1,13 @@
 #!/usr/bin/python3
-
 # -*- coding: utf-8 -*-
-from ppsd_utils import *
-from obspy.signal import PPSD
 
+from ppsd_utils import *
+dirname= (os.path.dirname(__file__))
 basename = os.path.basename(__file__)
 print ("============================================")
 print ("start ",basename)
+
+from obspy.signal import PPSD
 
 import matplotlib
 matplotlib.rcParams['agg.path.chunksize'] = 10000
@@ -17,7 +18,7 @@ from matplotlib import cm
 from obspy.imaging.cm import pqlx, obspy_sequential
 from obspy.imaging.util import _set_xaxis_obspy_dates
 
-cfgfile="./rms.cfg"
+cfgfile="%s/rms.cfg"%dirname
 SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
 
 # ---------------------------------
@@ -38,13 +39,11 @@ per_lap =0.9
 clip=[0.6,0.99] # dbscale=True
 clip=[0.01,0.5] # dbscale=False
 
-specfreqmax=20.0
+specfreqmax=50.0
 specfreqmin=0.1
-specfreqmin=0.2
-specfreqmin=0.5
 # ---------------------------------
 
-def plot_spectrogram_and_rms(ppsd, trace, df, cmap=cmap2, clim=None, grid=True,
+def plot_spectrogram(ppsd, cmap=cmap2, clim=None, grid=True,
                          filename=None, show=True):
         """
         Plot the temporal evolution of the PSD in a spectrogram-like plot.
@@ -72,11 +71,12 @@ def plot_spectrogram_and_rms(ppsd, trace, df, cmap=cmap2, clim=None, grid=True,
         #fig, ax = plt.subplots()
         print ("Plot spectro...")
         #fig, axes = plt.subplots(2)
-        #fig.set_size_inches(8, 5, forward=True)
-        fig=plt.figure(figsize=[8,6])
-        ax11 = fig.add_axes([0.1, 0.05, 0.85, 0.16]) # rms
-        ax12 = fig.add_axes([0.1, 0.21, 0.85, 0.16]) # rms
-        ax2 = fig.add_axes([0.1, 0.42, 0.85, 0.53]) # spectro
+        fig, ax2 = plt.subplots(1)
+        fig.set_size_inches(8, 5, forward=True)
+        #fig=plt.figure(figsize=[8,6])
+        #ax11 = fig.add_axes([0.1, 0.05, 0.85, 0.16]) # rms
+        #ax12 = fig.add_axes([0.1, 0.21, 0.85, 0.16]) # rms
+        #ax2 = fig.add_axes([0.1, 0.42, 0.85, 0.53]) # spectro
 
         #ax=ax2
 
@@ -131,69 +131,6 @@ def plot_spectrogram_and_rms(ppsd, trace, df, cmap=cmap2, clim=None, grid=True,
         # mpl <2 has different API for setting Axes background color
         except AttributeError:
             ax2.set_axis_bgcolor('0.8')
-
-        # Plot trace
-        print ("Plot trace...", FMIN,FMAX)
-        trace.filter(type='bandpass',freqmin=FMIN, freqmax=FMAX, corners=4)
-        npts = trace.stats.npts
-        dt = trace.stats.delta
-        t = np.linspace(0, dt * npts, npts)
-        t1,t2=trace.times("matplotlib")[0], trace.times("matplotlib")[-1]
-        #trace.plot(automerge=False,fig=fig, marker=',', color='k', equal_scale=False)
-        ax11.plot(trace.times("matplotlib"), trace.data, 'k', linewidth=0.4)
-        #print (trace)
-        print ("Max trace:",max(abs(trace.data)))
-        #print (t)
-        ax11.set_xlim(t1, t2)
-
-
-        print ("Plot RMS...")
-        ##ax11.plot(df['Datetime'], df['rms'], 'b-', linewidth=1.0)
-        #ax12.plot(df['Datetime'], df['rms'], 'b-', linewidth=0.8)
-        ax12.plot(df['Datetime'], df['rms'], 'bo', markersize=0.8)
-
-        _set_xaxis_obspy_dates(ax11)
-
-        ax11.set_xlim(ppsd.times_processed[0].matplotlib_date,
-                    (ppsd.times_processed[-1] + ppsd.step).matplotlib_date)
-        ax12.set_xlim(ppsd.times_processed[0].matplotlib_date,
-                    (ppsd.times_processed[-1] + ppsd.step).matplotlib_date)
-
-        Q1=np.quantile(abs(trace.data), 0.98)
-        #YMAX11=min (max(max(abs(trace.data))*1.1, YMAX1), 50)
-        YMAX11=min (max(Q1*2.5, YMAX1), 200)
-        ax11.set_ylim(-YMAX11,YMAX11) # signal
-
-        Q2=np.quantile(df.rms*1.5, 0.9)
-        YMAX22=max(Q2, YMAX2)
-        ax12.set_ylim(0,YMAX22) # rms
-
-        #YMAX11=max(abs(df['rms']))*1.05
-        #if (station != "HYF"):
-        #    ax11.set_ylim(-YMAX,YMAX) # nm/s
-        #    ax12.set_ylim(-YMAX,YMAX) # nm/s
-        #else:
-        #    ax11.set_ylim(-YMAX11,YMAX11) # nm/s
-        #    ax12.set_ylim(-YMAX11,YMAX11) # nm/s
-
-        #ax11.set_yscale("log")
-        #ax12.set_yscale("log")
-
-        #bbox = {'fc': '0.8', 'pad': 0}
-        props={'ha': 'left', 'va': 'center'}
-        ax11.text(ax11.get_xlim()[1], ((ax11.get_ylim()[0]+ax11.get_ylim()[1])/2), FREQ1.replace("_","-").replace("Hz"," Hz"), props, rotation=270, color='r')
-        ax12.text(ax12.get_xlim()[1], ((ax12.get_ylim()[0]+ax12.get_ylim()[1])/2), FREQ2.replace("_","-").replace("Hz"," Hz"), props, rotation=270, color='r')
-
-        if (OUTPUT=="DISP"):
-            ax11.set_ylabel('Displ (nm)')
-            ax12.set_ylabel('RMS (nm)')
-        if (OUTPUT=="VEL"):
-            ax11.set_ylabel('Vel (nm/s)')
-            ax12.set_ylabel('RMS (nm/s)')
-
-        ax11.grid()
-        ax12.xaxis.set_visible(False)
-        ax12.grid()
 
         ax2.set_ylim(specfreqmax, specfreqmin) ## 1Hz max, pour ne pas voir le pic de houle
         ax2.set_title("%s" % (nslc))
@@ -267,6 +204,7 @@ nslc = nslc.replace("*", "").replace("?", "")
 
 datelist = pd.date_range(start.datetime, min(end, UTCDateTime()).datetime, freq="D")
 
+"""
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
     day2=(day+timedelta(days=1))
@@ -307,6 +245,7 @@ print (stALL)
 #print (max(stALL[0].data))
 
 trace=stALL[0]
+"""
 
 
 # ---------------------------------
@@ -329,6 +268,7 @@ for day in pbar:
                 warnings.simplefilter("ignore")
                 ppsds[mseedid].add_npz(fn)#, allow_pickle=True)
 
+"""
 # ---------------------------------------------
 # Reead rms files
 # ---------------------------------------------
@@ -374,9 +314,8 @@ del df
 
 print ("----")
 
-"""
 # ---------------------------------------------
-# Reead rms files
+# Read rms files
 # ---------------------------------------------
 for fn in glob("%s/csv/*_%s_%s.csv" % (DATADIR,nslc,FREQ2)):
     df=pd.read_csv(fn, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
@@ -415,7 +354,7 @@ for mseedid, ppsd in ppsds.items():
 
 #print ("Max=",max(tr.data))
 
-plot_spectrogram_and_rms(ppsd, trace, dfRMS1, filename="./figures/%s_combo_signal.png"%nslc, show=False,clim=[-160, -120])
+plot_spectrogram(ppsd, filename="%s/figures/%s_combo_signal.png"%(dirname,nslc), show=False,clim=[0, 80])
 #plt.show()
 exit()
 
