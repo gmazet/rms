@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from ppsd_utils import *
 
+dirname= (os.path.dirname(__file__))
 basename = os.path.basename(__file__)
 print ("============================================")
 print ("start ",basename)
@@ -26,7 +27,7 @@ except:
     print ('Usage: %s "YYYY-MM-DDTHH:mm:ss.s" <nb hours> <network> <station> <location> <channel> <DISP or VEL or ACC>' % basename)
     exit()
 
-cfgfile="./rms.cfg"
+cfgfile="%s/rms.cfg"%dirname
 SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
 
 #PROCESSED_DATA_DIR="%s/%s" % (DATADIR,OUTPUT)
@@ -50,6 +51,7 @@ client=SDSClient(SDSROOT)
 try:
     fclient=FDSNClient("RESIF")
 except:
+    print ("ERROR: Can't connect FDSN client to RESIF WS")
     pass
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
@@ -99,8 +101,10 @@ except:
     except:
         try:
             inv=fclient.get_stations(network=network, sta=station, loc=location, channel=channel, level="response")
+            print ("Query response via FDSN")
         except:
             raise()
+
 
 try:
     print (inv[0][0][0].response)
