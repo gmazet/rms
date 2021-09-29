@@ -4,6 +4,7 @@
 from ppsd_utils import *
 from obspy.signal import PPSD
 
+dirname= (os.path.dirname(__file__))
 basename = os.path.basename(__file__)
 print ("============================================")
 print ("start ",basename)
@@ -12,11 +13,11 @@ print ("start ",basename)
 # For remove response
 #pre_filt = [0.05, 0.1, 30, 35]
 #pre_filt = [0.5, 0.7, 30, 32]
-pre_filt = [0.01, 0.05, 28, 30]
+#pre_filt = [0.01, 0.05, 28, 30]
 
 # PPSD
 freqmin=0.02 # seconds
-freqmax=10.0 # seconds
+freqmax=100.0 # seconds (10)
 
 force_reprocess=0
 # -----------------------------------
@@ -36,12 +37,13 @@ start = UTCDateTime(begtime)
 end=start+durationH*3600
 print ("start=",start,"end=",end)
 
-cfgfile="./rms.cfg"
+cfgfile="%s/rms.cfg"%dirname
 SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
 
 try:
     fclient=FDSNClient("RESIF")
 except:
+    print ("ERROR: Can't connect FDSN client to RESIF WS")
     pass
 
 # ---------------------------------------------
@@ -58,6 +60,7 @@ except:
     except:
         try:
             inv=fclient.get_stations(network=network, sta=station, loc=location, channel=channel, level="response")
+            print ("Query response via FDSN")
         except:
             raise()
 
@@ -81,7 +84,7 @@ except:
 
 
 # PPSD
-print ("")
+print ("PPSD...")
 pbar = tqdm.tqdm(datelist)
 for day in pbar:
     print ("day",day)
@@ -107,15 +110,15 @@ for day in pbar:
             continue
         st = read(fn_in, sourcename=mseedid)
         trace=st[0]
-        print ("ppsd...")
+        #print ("ppsd...")
         ppsd = PPSD(trace.stats, inv,
-                ppsd_length=600, overlap=0.5,
+                ppsd_length=1800, overlap=0.5,
                 period_smoothing_width_octaves=0.025,
                 period_step_octaves=0.0125,
                 period_limits=(freqmin, freqmax),
-                db_bins=(-200, 20, 0.25))
+                db_bins=(-200, 100, 0.25))
                 #period_limits=(0.008, 50),
-        print ("add traces ...")
+        #print ("add traces ...")
         ppsd.add(st)
         ppsd.save_npz(fn_out[:-4])
         del st, ppsd
