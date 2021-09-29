@@ -11,3 +11,6 @@ resif.sta
 resif2.sh
 rms.cfg
 *.swp
+*.out
+*.sta
+tmp/
