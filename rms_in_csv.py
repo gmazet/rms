@@ -3,13 +3,14 @@
 from ppsd_utils import *
 from obspy.signal import PPSD
 
+dirname= (os.path.dirname(__file__))
 basename = os.path.basename(__file__)
 print ("============================================")
 print ("start ",basename)
 
 # ----------------------------
 #OUTPUT="VEL" # DISP, VEL or ACC
-OUTPUT="DISP" # DISP, VEL or ACC
+#OUTPUT="DISP" # DISP, VEL or ACC
 #PROCESSED_DATA_DIR="%s/%s" % (DATADIR,OUTPUT)
 # ----------------------------
 
@@ -25,17 +26,19 @@ try:
     FMIN=float(argv[7])
     FMAX=float(argv[8])
     winlen_sec=int(argv[9])
+    OUTPUT=argv[10]
 except:
     print ('Usage: %s "YYYY-MM-DDTHH:mm:ss.s" <nb hours> <network> <station> <location> <channel> <freq min> <freq max> <window length (seconds)>')
     exit()
 
-cfgfile="./rms.cfg"
+
+cfgfile="%s/rms.cfg"%dirname
 SDSROOT, DATADIR, XMLDIR, TELSITE_XMLDIR = readcfg(cfgfile)
 
 start = UTCDateTime(begtime)
 end=start+durationH*3600
 print ("start=",start,"end=",end)
-step_sec=int(winlen_sec)
+step_sec=int(winlen_sec/2.0)
 
 # ---------------------------------------------
 
@@ -60,7 +63,7 @@ for day in pbar:
     csvdatadir="{}/csv/{}/{}/{}".format(DATADIR,YYYY,MM,DD)
     pathlib.Path(csvdatadir).mkdir(parents=True, exist_ok=True)
     csvfile="%s/%s_%s_%.1f_%.1fHz.csv" % (csvdatadir,datestr,nslc,FMIN,FMAX)
-    pbar.set_description("Reading displacement files %s" % fn_in)
+    pbar.set_description("Reading displacement (or velocity) files %s" % fn_in)
     if not os.path.isfile(fn_in):
         continue
     stall = read(fn_in, headonly=True)
