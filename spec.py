@@ -41,9 +41,13 @@ try:
     station=argv[4]
     location=argv[5]
     channel=argv[6]
-    freqmax=float(argv[7])
+    freqmin=float(argv[7])
+    freqmax=float(argv[8])
 except:
     raise()
+
+permax=int(1.0/freqmin)
+permin=int(1.0/freqmax)
 
 start = UTCDateTime(begtime)
 end=start+durationH*3600
@@ -89,35 +93,58 @@ from obspy.signal import spectral_estimation as spe
 
 fig= plt.figure()
 ax = fig.gca()
-ax.semilogx(nhnm_fq, nhnm_psd, 'k--')
-ax.semilogx(nlnm_fq, nlnm_psd, 'k--')
-
-val50 = ppsd.get_percentile(50)
-fq50 = np.reciprocal(val50[0])
-amp50 = val50[1]
 
 val5=ppsd.get_percentile(5)
+val50 = ppsd.get_percentile(50)
 val95=ppsd.get_percentile(95)
-fq5, amp5 = np.reciprocal(val5[0]), val5[1]
-fq95, amp95 = np.reciprocal(val95[0]), val95[1]
+##print (val50[0])
+
+per5, fq5, amp5 = val5[0],np.reciprocal(val5[0]), val5[1]
+per50, fq50, amp50 = val50[0],np.reciprocal(val50[0]), val50[1]
+per95, fq95, amp95 = val95[0],np.reciprocal(val95[0]), val95[1]
 
 #Q=np.quantile(amp, 0.90)
 #print (Q)
 #amp=np.clip(amp, 0, Q)
 
-ax.semilogx(fq50, amp50, 'ro', markersize=1, label='Median')
-ax.semilogx(fq5, amp5, 'o', color='lightgrey', markersize=0.5, label='5th percentile')
-ax.semilogx(fq95, amp95, 'o', color='grey', markersize=0.5, label='95th percentile')
-#ax.semilogx(fq, ppsd, 'o', cmap='pqlx', markersize=0.1)
 
-ax.set_ylim(-175, -85)
-ax.set_xlim(0.1, freqmax)
+if (freqmax>1.0): # X-axis in Frequency
+    ax.semilogx(nhnm_fq, nhnm_psd, 'k--')
+    ax.semilogx(nlnm_fq, nlnm_psd, 'k--')
+    ax.semilogx(fq50, amp50, 'ro', markersize=1, label='Median')
+    ax.semilogx(fq5, amp5, 'o', color='lightgrey', markersize=0.5, label='5th percentile')
+    ax.semilogx(fq95, amp95, 'o', color='grey', markersize=0.5, label='95th percentile')
+    #ax.semilogx(fq, ppsd, 'o', cmap='pqlx', markersize=0.1)
 
-ax.set(xlabel='Fréquence (Hz)')
-ax.set(ylabel=r'PSD Acceleration 20log($m/s^2/\sqrt{Hz}$) dB')
+    ax.set_xlim(freqmin, freqmax)
+    ax.set(xlabel='Fréquence (Hz)')
+
+    ax.set_ylim(-175, -85)
+    ax.set(ylabel=r'PSD Acceleration 20log($m/s^2/\sqrt{Hz}$) dB')
+
+    loclegend='lower left'
+else: # X-axis in Periods
+    #ax.semilogx(nhnm_T, nhnm_psd, 'k--')
+    #ax.semilogx(nlnm_T, nlnm_psd, 'k--')
+    ax.semilogx(per50, amp50, 'ro', markersize=1, label='Median')
+    ax.semilogx(per5, amp5, 'o', color='lightgrey', markersize=0.5, label='5th percentile')
+    ax.semilogx(per95, amp95, 'o', color='grey', markersize=0.5, label='95th percentile')
+
+    print (permin, permax)
+    ax.set_xlim(permin, permax)
+    ax.set(xlabel='Période (secondes)')
+
+    if (channel[:2] == 'MA'): #ClinoF
+        ax.set_ylim(0, 40)
+    if (channel[:2] == 'LA'): #Lily
+        ax.set_ylim(30, 80)
+    ax.set(ylabel=r'DSP (dB count/$\sqrt{Hz}$)')
+
+    loclegend='lower right'
+
 ax.set_title("{} {} -> {}".format(nslc,begtime[:10],str(end)[:10]), fontsize=10)
 
-plt.legend(loc='lower left')
+plt.legend(loc=loclegend)
 plt.grid()
 
 print (ax,ax.get_ylim(), ax.get_xlim())

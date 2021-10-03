@@ -10,7 +10,7 @@ print ("start ",basename)
 # ----------------------------------
 force_reprocess=0
 #OUTPUT="VEL" # DISP, VEL or ACC
-OUTPUT="DISP" # DISP, VEL or ACC
+#OUTPUT="DISP" # DISP, VEL or ACC
 # ----------------------------------
 
 print ("")
@@ -110,8 +110,10 @@ try:
     print (inv[0][0][0].response)
     SENSIB_DISP=1.0/inv[0][0][0].response._get_overall_sensitivity_and_gain(frequency=5.0, output='DISP')[1]*1e+9
     SENSIB_VEL=1.0/inv[0][0][0].response._get_overall_sensitivity_and_gain(frequency=5.0, output='VEL')[1]*1e+9
+    SENSIB_ACC=1.0/inv[0][0][0].response._get_overall_sensitivity_and_gain(frequency=5.0, output='ACC')[1]*1e+9
     print ("SENSIB_DISP= %.3f"%SENSIB_DISP," nm/count at 5.0Hz")
     print ("SENSIB_VEL = %.3f"%SENSIB_VEL," nm/s/count at 5.0Hz")
+    print ("SENSIB_ACC = %.3f"%SENSIB_ACC," nm/s/s/count at 5.0Hz")
 
     SENSIB=1.0/inv[0][0][0].response._get_overall_sensitivity_and_gain(frequency=5.0, output=OUTPUT)[1]
 except:

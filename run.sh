@@ -22,7 +22,7 @@ case $# in
         exit;;
 esac
 
-echo "BEGDATE=$BEGDATE"
+echo "BEGDATE,duration=$BEGDATE,$duration"
 echo "year,month=$year,$month"
 
 # Répertoire de travail
@@ -45,23 +45,47 @@ PYTHONEXE=/usr/bin/python3
 
 if [ $chans = "MURU" ] ; then
 	# Détecteur RC de MURU
-	FMIN=8.0
-	FMAX=16.0
+	FMIN_RMS=8.0
+	FMAX_RMS=16.0
 	RMS_UNIT=VEL
 	strgrep="[HE][HP][ZNE]"
+	freqmin=0.1
 	#strgrep="HH[ZNE]"
 	grep "^RD\|" $STATIONFILE | grep "MURU" | grep $strgrep > $STATIONTMPFILE
+else if [ $chans = "SEQ" ] ; then
+	# Détecteur RC de MURU
+	FMIN_RMS=0.00001
+	FMAX_RMS=0.1
+	RMS_UNIT=ACC # HACK for acceleration PSD
+	strgrep="[LM][A][NE]"
+	freqmin=0.001 # 100 000 sec ~1 day
+	#strgrep="HH[ZNE]"
+	grep "^RD\|" $STATIONFILE | grep "$chans" | grep $strgrep > $STATIONTMPFILE
+else if [ $chans = "ACCELERO" ] ; then
+	# Détecteur RSN d'alerte
+	FMIN_RMS=2.0
+	FMAX_RMS=6.0
+	RMS_UNIT=ACC
+	freqmin=1.0
+        strgrep="[BH]N[ZNE]|SMFF"
+	grep "^RD\|" $STATIONFILE | grep -v "MURU" | egrep $strgrep  > $STATIONTMPFILE
 else
 	# Détecteur RSN d'alerte
-	FMIN=2.0
-	FMAX=6.0
+	FMIN_RMS=2.0
+	FMAX_RMS=6.0
 	RMS_UNIT=DISP
+	freqmin=0.1
         if [ $chans = "SH" ] ; then
                 strgrep="[ES]H[ZNE]|SFTF"
-        else
+	else if [ $chans = "BH" ] ; then
                 strgrep="[BH]H[ZNE]"
+	else
+		exit
+	fi
         fi
 	grep "^RD\|" $STATIONFILE | grep -v "MURU" | egrep $strgrep  > $STATIONTMPFILE
+fi
+fi
 fi
 head $STATIONTMPFILE
 
@@ -77,7 +101,7 @@ while ( [ $i -le $nbchan ] ) ; do
 	#if [ $sta != "2CAM0" -a $sta != "2DEN0" ] ; then i=$(expr $i + 1);continue; fi
 	#if [ $sta != "CABF" -a $sta != "LPG" ] ; then i=$(expr $i + 1);continue; fi
 	#if [ $sta != "2CAM0" ] ; then i=$(expr $i + 1);continue; fi
-	#if [ $sta != "LPG" ] ; then i=$(expr $i + 1);continue; fi
+	#if [ $sta != "SMFF"  -a $sta != "RPF" ] ; then i=$(expr $i + 1);continue; fi
 	echo
 	echo
 	echo "#####################################################################"
@@ -85,10 +109,13 @@ while ( [ $i -le $nbchan ] ) ; do
 
 	# fréquence de Nyquist pour chaque voie
 	chancode=$(echo $channel | cut -c 1-1)
-	if [ $chancode = "B" -o $chancode = "S" ] ; then
+	if [ $chancode = "B" -o $chancode = "S" ] ; then # CPZ and BH*
 		freqmax=25
-	else
+	else if [ $chancode = "L" -o $chancode = "M" ] ; then # Lily, ClinoF, tide gauge
+		freqmax=1 
+        else
 		freqmax=50
+	fi
 	fi
 
         echo $BEGDATE $duration $net $sta "$loccode" $channel $freqmax
@@ -102,28 +129,34 @@ while ( [ $i -le $nbchan ] ) ; do
 	#rm $DATADIR/$RMS_UNIT/$year/$month/*/*_$net.$sta.$loccode.$channel.* # CLEAN ALL MONTH !
 
 	# Fetch data and deconvoluate
+	$PYTHONEXE $DIR/fetch_data.py $BEGDATE $duration $net $sta "$loccode" $channel
+	#echo "$PYTHONEXE $DIR/deconvolution.py $BEGDATE $duration $net $sta "$loccode" $channel $RMS_UNIT"
 	sleep 0.5;$PYTHONEXE $DIR/deconvolution.py $BEGDATE $duration $net $sta "$loccode" $channel $RMS_UNIT
 
 	# Delete npz files of previous day
 	rm $DATADIR/npz/$year/$month/$daybefore/*_$net.$sta.$loccode.$channel.*
 	#rm $DATADIR/npz/$year/$month/*/*_$net.$sta.$loccode.$channel.*  # CLEAN ALL MONTH !
 	# Compute PPSD
-	sleep 0.5;$PYTHONEXE $DIR/ppsd_and_npz.py $BEGDATE $duration $net $sta "$loccode" $channel
+	sleep 0.5;$PYTHONEXE $DIR/ppsd_and_npz.py $BEGDATE $duration $net $sta "$loccode" $channel $freqmax
 
 	# Compute displacement rms and csv files
- 	sleep 0.5;$PYTHONEXE $DIR/rms_in_csv.py $BEGDATE $duration $net $sta "$loccode" $channel $FMIN $FMAX $WINLEN $RMS_UNIT
+ 	sleep 0.5;$PYTHONEXE $DIR/rms_in_csv.py $BEGDATE $duration $net $sta "$loccode" $channel $FMIN_RMS $FMAX_RMS $WINLEN $RMS_UNIT
 
 	echo "----------------------------"
 	echo "--- Plot spectrum"
 	echo "----------------------------"
- 	sleep 0.5;$PYTHONEXE $DIR/spec.py $BEGDATE $duration $net $sta "$loccode" $channel $freqmax
+ 	echo "$PYTHONEXE $DIR/spec.py $BEGDATE $duration $net $sta "$loccode" $channel $freqmin $freqmax"
+ 	sleep 0.5;$PYTHONEXE $DIR/spec.py $BEGDATE $duration $net $sta "$loccode" $channel $freqmin $freqmax
+#i=$(expr $i + 1)
+#continue # DEBUG
 	
 	echo "----------------------------"
 	echo "--- Plot spectro+rms"
 	echo "----------------------------"
-	FREQS=$(echo $FMIN $FMAX | awk '{printf ("%.1f_%.1fHz", $1,$2)}')
+	FREQS=$(echo $FMIN_RMS $FMAX_RMS | awk '{printf ("%.1f_%.1fHz", $1,$2)}')
 	echo "FREQS=",$FREQS
- 	sleep 0.5;$PYTHONEXE $DIR/combo2.py $BEGDATE $duration $net $sta "$loccode" $channel $FMIN $FMAX "$FREQS" "$FREQS" $freqmax $RMS_UNIT
+ 	sleep 0.5;$PYTHONEXE $DIR/combo2.py $BEGDATE $duration $net $sta "$loccode" $channel $FMIN_RMS $FMAX_RMS "$FREQS" "$FREQS" $freqmax $RMS_UNIT
+ 	#sleep 0.5;$PYTHONEXE $DIR/spectrogram_period.py $BEGDATE $duration $net $sta "$loccode" $channel $freqmin $freqmax
 
 	if [ $lastNdays -eq 0 ] ; then
 		mkdir -p $DIR/figures/$year/$month

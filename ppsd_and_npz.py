@@ -15,9 +15,6 @@ print ("start ",basename)
 #pre_filt = [0.5, 0.7, 30, 32]
 #pre_filt = [0.01, 0.05, 28, 30]
 
-# PPSD
-freqmin=0.02 # seconds
-freqmax=100.0 # seconds (10)
 
 force_reprocess=0
 # -----------------------------------
@@ -29,9 +26,23 @@ try:
     station=argv[4]
     location=argv[5]
     channel=argv[6]
+    freqmax=float(argv[7])
 except:
     print ('Usage: %s "YYYY-MM-DDTHH:mm:ss.s" <nb hours> <network> <station> <location> <channel>')
     exit()
+
+if (freqmax>1.0):
+    # PPSD
+    PPSD_permin=0.02 # 0.02 seconds = 50 Hz
+    PPSD_permax=100.0 # seconds 
+    PPSD_length=1800 # seconds
+    PPSD_overlap=0.5
+else: 
+    # PPSD
+    PPSD_permin=1.0# 1s = 1Hz
+    PPSD_permax=1000.0 # 10 000 sec
+    PPSD_length=86400 # seconds
+    PPSD_overlap=0.1
 
 start = UTCDateTime(begtime)
 end=start+durationH*3600
@@ -112,10 +123,10 @@ for day in pbar:
         trace=st[0]
         #print ("ppsd...")
         ppsd = PPSD(trace.stats, inv,
-                ppsd_length=1800, overlap=0.5,
+                ppsd_length=PPSD_length, overlap=PPSD_overlap,
                 period_smoothing_width_octaves=0.025,
                 period_step_octaves=0.0125,
-                period_limits=(freqmin, freqmax),
+                period_limits=(PPSD_permin, PPSD_permax),
                 db_bins=(-200, 100, 0.25))
                 #period_limits=(0.008, 50),
         #print ("add traces ...")

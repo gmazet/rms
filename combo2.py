@@ -49,15 +49,22 @@ except:
     OUTPUT="DISP"
 
 if (OUTPUT=="DISP"):
+    ylabel='RMS (nm)'
+    freqmin=0.1
     climmin,climmax=-160,-120 # RSN
-else:
+elif (OUTPUT=="VEL"):
+    ylabel='RMS (nm/s)'
+    freqmin=0.1
     climmin,climmax=-155,-100 # Muru
+else:
+    ylabel=r'RMS ($µm/s^2$)'
+    freqmin=1.0
+    climmin,climmax=-135,-95 # Accélero
 
-specfreqmax=25.0
-specfreqmin=0.2
-specfreqmin=0.5
-specfreqmin=0.1
-freqmin=0.1
+#specfreqmax=25.0
+#specfreqmin=0.2
+#specfreqmin=0.5
+#specfreqmin=0.1
 
 YMAX1=10.0 # nm in signal 
 YMAX2=1.0 # nm in rms 
@@ -179,10 +186,7 @@ def plot_spectrogram_and_rms(ppsd, df, cmap=cmap2, clim=None, grid=True,
         props={'ha': 'left', 'va': 'center'}
         ax12.text(ax12.get_xlim()[1], ((ax12.get_ylim()[0]+ax12.get_ylim()[1])/2), FREQ2.replace("_","-").replace("Hz"," Hz"), props, rotation=270, color='r')
 
-        if (OUTPUT=="DISP"):
-            ax12.set_ylabel('RMS (nm)')
-        if (OUTPUT=="VEL"):
-            ax12.set_ylabel('RMS (nm/s)')
+        ax12.set_ylabel(ylabel)
 
         ax12.grid()
 
@@ -276,7 +280,10 @@ for day in pbar:
         df=pd.read_csv(fn, sep=',', header=0, names=headers, dtype=dtypes, parse_dates=parse_dates)
         #Q=np.quantile(df.rms, QUANTILE)
         #df.rms=np.clip(df.rms, 0, Q)
-        df.rms=df.rms*1e+9 # m -> nm or m/s -> nm/s
+        if (OUTPUT in ('DISP','VEL')):
+            df.rms=df.rms*1e+9 # m -> nm or m/s -> nm/s
+        else:
+            df.rms=df.rms*1e+6 # m/s/s -> µm/s/s
         try:
             dfALL=pd.concat([dfALL, df], ignore_index=True)
         except:
